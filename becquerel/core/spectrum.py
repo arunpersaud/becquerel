@@ -935,9 +935,7 @@ class Spectrum(object):
         elif handle_livetime.lower() == "reduce":
             new_livetime = self.livetime / f
         else:
-            raise ValueError(
-                "Illegal value for handle_livetime: {}".format(handle_livetime)
-            )
+            raise ValueError(f"Illegal value for handle_livetime: {handle_livetime}")
 
         # TODO handle uncertainty?
         old_counts = self.counts_vals.astype(int)
