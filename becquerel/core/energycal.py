@@ -391,3 +391,104 @@ class LinearEnergyCal(EnergyCalBase):
         b, c = np.polyfit(self.channels, self.energies, 1)
         self._set_coeff("b", b)
         self._set_coeff("c", c)
+
+
+class PolyEnergyCal(EnergyCalBase):
+    """
+    poly fit of degree N
+    """
+
+    def __init__(self, N):
+        super().__init__()
+        self.N = N
+        self.fit_parameter = None
+        self.inverse_fit_parameter = None
+
+    @classmethod
+    def from_points(cls, chlist, kevlist, include_origin=False, degree=2):
+        """Construct EnergyCal from calibration points.
+
+        Args:
+          chlist: list/tuple/array of the channel values of calibration points
+          kevlist: list/tuple/array of the corresponding energy values [keV]
+          include_origin: Default is False, if set to True will add a point
+                          at zero into the fit.
+
+        Raises:
+          BadInput: for bad chlist and/or kevlist.
+        """
+
+        if chlist is None or kevlist is None:
+            raise BadInput("Channel list and energy list are required")
+
+        try:
+            cond = len(chlist) != len(kevlist)
+        except TypeError:
+            raise BadInput("Inputs must be one dimensional iterables")
+        if cond:
+            raise BadInput("Channels and energies must be same length")
+
+        cal = cls(N=degree)
+
+        if include_origin:
+            cal.new_calpoint(0, 0)
+
+        for ch, kev in zip(chlist, kevlist):
+            try:
+                cal.new_calpoint(ch, kev)
+            except (ValueError, TypeError):
+                raise BadInput("Inputs must be one dimensional iterables")
+        cal.update_fit()
+        return cal
+
+    @property
+    def valid_coeffs(self):
+        """A list of valid coefficients for the calibration curve.
+
+        Returns:
+          a tuple of strings, the names of the coefficients for this curve
+        """
+
+        return [f"p{i}" for i in range(self.N + 1)]
+
+    def _ch2kev(self, ch):
+        """Convert scalar OR np.array of channel(s) to energies.
+
+        Should use numpy ufuncs so that the input dtype doesn't matter.
+
+        Args:
+          ch: an np.array, float, or int of channel values
+
+        Returns:
+          energy values, the same size/type as ch [keV]
+        """
+
+        return self.fit_function(ch)
+
+    def _kev2ch(self, kev):
+        """Convert energy value(s) to channel(s).
+
+        Args:
+          kev: an np.array, float, or int of energy values [keV]
+
+        Returns:
+          the channel value(s) corresponding to the input energies.
+            a float if input is scalar. an np.array if input is iterable
+        """
+
+        return self.inverse_fit_function(kev)
+
+    def _perform_fit(self):
+        """Do the actual curve fitting."""
+
+        self._coeffs = {}
+        parameter = np.polyfit(self.channels, self.energies, self.N)
+        self.fit_parameter = parameter
+        self.fit_function = np.poly1d(parameter)
+
+        for i, p in enumerate(reversed(parameter)):
+            self._set_coeff(f"p{i}", p)
+
+        parameter = np.polyfit(self.energies, self.channels, self.N)
+        self.inverse_fit_parameter = parameter
+        self.inverse_fit_function = np.poly1d(parameter)
