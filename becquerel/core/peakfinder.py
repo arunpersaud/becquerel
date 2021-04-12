@@ -390,7 +390,7 @@ class PeakFinder:
         d2 = np.append(0, d2)
         d2 = np.append(d2, 0)
         # find maxima
-        peak = (d1[2:] < 0) & (d1[:-2] > 0) & (d2[1:-1] < 0)
+        peak = (d1[2:] < 0) & (d1[1:-1] > 0) & (d2[1:-1] < 0)
         peak = np.append(False, peak)
         peak = np.append(peak, False)
         # select peaks using SNR and centroid criteria
