@@ -800,7 +800,8 @@ class Fitter:
                 weights=self.dx_roi,
                 fit_kws={"reduce_fcn": lambda r: np.sum(r)},
                 method="Nelder-Mead",
-                calc_covar=False,
+                scale_covar=False,
+                calc_covar=True,
             )  # no, bounds, default would be L-BFGS-B'
             # NOTE: Calculating errors in lmfit-pml breaks minimization
 
@@ -943,7 +944,7 @@ class Fitter:
                 )
                 raise ValueError(msg)
             mask = model <= 0  # This should not be necessary
-            diff = model - scipy.special.xlogy(data, model)
+            diff = (model - scipy.special.xlogy(data, model)) * 2
             diff[mask] = 1e32
             if np.issubdtype(diff.dtype, complex):
                 # data/model are complex

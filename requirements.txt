@@ -9,8 +9,6 @@ llvmlite
 lmfit
 lxml
 matplotlib
-numba>=0.47.0
-numdifftools
 numpy
 pandas
 python-dateutil

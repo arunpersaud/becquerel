@@ -1,4 +1,4 @@
-import numba as nb
+# -*- coding: utf-8 -*-
 import numpy as np
 import warnings
 
@@ -89,7 +89,6 @@ def _check_any_overlap(in_edges, out_edges):
         raise RebinError("Input edges are all larger than output edges")
 
 
-@nb.vectorize([nb.f8(nb.f8, nb.f8, nb.f8, nb.f8)], nopython=True)
 def _linear_offset(slope, cts, low, high):
     """
     Calculate the offset of the linear approximation of slope when splitting
@@ -111,7 +110,6 @@ def _linear_offset(slope, cts, low, high):
     return offset
 
 
-@nb.vectorize([nb.f8(nb.f8, nb.f8, nb.f8)], nopython=True)
 def _slope_integral(x, m, b):
     """Indefinite integral of y = mx + b, with an x value substituted in.
 
@@ -127,7 +125,6 @@ def _slope_integral(x, m, b):
     return m * x**2 / 2 + b * x
 
 
-@nb.vectorize([nb.f8(nb.f8, nb.f8, nb.f8, nb.f8)], nopython=True)
 def _counts(m, b, x_low, x_high):
     """Definite integral of y = mx + b.
 
@@ -148,9 +145,6 @@ def _counts(m, b, x_low, x_high):
     return _slope_integral(x_high, m, b) - _slope_integral(x_low, m, b)
 
 
-@nb.guvectorize(
-    [(nb.f8[:], nb.f8[:], nb.f8[:], nb.f8[:], nb.f8[:])], "(n),(N),(m),(n)->(m)"
-)
 def _rebin_interpolation(
     in_spectrum, in_edges, out_edges_no_rightmost, slopes, out_spectrum
 ):
@@ -222,7 +216,6 @@ def _rebin_interpolation(
             out_spectrum[out_idx] += _counts(slope, offset, low, high)
 
 
-@nb.guvectorize([(nb.i8[:], nb.f8[:], nb.f8[:], nb.i8[:])], "(n),(N),(m)->(m)")
 def _rebin_listmode(in_spectrum, in_edges, out_edges_no_rightmost, out_spectrum):
     """Stochastic rebinning method: spectrum-histogram to listmode then back.
 
